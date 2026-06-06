@@ -1,12 +1,28 @@
-这是SQL注入基础部分的学习笔记：
-更多的是我学习时候的不熟练的地方。
+# MySQL--SQL注入理论基础
 
-我学习的时候针对的是MySQL，然后完成DVWA的low medium 以及high难度，并简单了解了impossible难度下的绝对防御。
+>**一切用户可控的输入，皆是攻击面**
 
-分为普通注入和盲注：
+## 1.注入分类
+### 1.1 普通注入
+* 特点：有明显特定的数据回显，以DVWA的SQL注入为例，当输入已存在的用户ID时，会回显指定用户的first_name surname。
+* 常见技术：UNION注入，报错注入...
 
-普通注入就是有详细数据的回显，比如让你输入用户ID，就可以明确知道用户的first_name surname等等不是很私密的信息。
+### 1.2 盲注
+* 特点：没有特定数据的回显，并且其也应该依据什么样的回显选择什么样的盲注。
+比如，当回显能够在正确时和错误时有不相同的回显，就先去判断**布尔盲注**；当无论正确与否，回显都相同时，尝试**时间盲注**`sleep(N)`...
 
-而盲注也要分多种情况，鉴于现在是基础学习，只讲两种：布尔盲注和时间盲注。
+## 2.简单DVWA靶场通关
+### 2.1 普通注入的坑
+* UNION注入时,`0' union select 1,group_concat(table_name) from information_schema.tables where table_schema='dvwa'#`这个SQL注入语句会报错，说是UNION两边类型不同，具体可以去问AI，解决方法我认为直接转换成十六进制就没问题了 `hex(group_concat(table_name)) from...`
+  
+### 2.2 盲注
+我感觉盲注就是一个个去猜，先猜数据库个数，然后一个个猜数据库名字（一个一个字符猜），然后拿到可疑数据库，再猜里面的表数，然后一个个猜表名（一个一个字符猜），看到可疑表，再一个个猜列数和列名，发现可疑列，然后去拿数据就好了。
+`0' union select user,password from dvwa.users#`
 
-其中布尔盲注适用于有正常回显，但是只告诉你这个数据是exist还是missing的，而时间盲注适用于不论你输入的ID，数据库存不存在，他的回显都是相同的，这时候你想知道自己的注入命令有没有被执行，就是利用sleep(N)等操作来分析执行的时间长短来判断命令是否执行。
+举个例子：猜dvwa数据库里面的表数
+`1' and (select count(table_name) from information_schema.tables where schema_table='dvwa')=8#`
+
+
+时间盲注形式上有一点不同，但原理还是猜猜猜：依旧猜dvwa数据库里面的表数
+`1' and if((select count(table_name) from information_schema.tables where table_schema='dvwa')=8,sleep(5),1)#`
+  
